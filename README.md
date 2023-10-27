@@ -1,6 +1,6 @@
 # CryptoCannon Showdown
 
-Ban AI in a game of [Battleship](https://www.officialgamerules.org/battleship) (also known as Sea Battle) for the chance to win some cryptocurrency.
+Play AI in a game of [Battleship](https://www.officialgamerules.org/battleship) (also known as Sea Battle) for the chance to win some cryptocurrency.
 
 ```mermaid
 sequenceDiagram
