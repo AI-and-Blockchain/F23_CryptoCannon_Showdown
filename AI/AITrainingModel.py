@@ -1,29 +1,124 @@
-# KEEP IT AS IMPORT GYM SINCE THE LIBRARY DOESNT WORK WITH GYMNASIUM
 import gym
-# FOR SOME REASON, ADVERSARIAL BATTLESHIP DOESNT WORK, WILL TRY FIX SOON
-import gym_battleship
+from gym import spaces
+import numpy as np
+from stable_baselines3.common.callbacks import BaseCallback
+import os
+from stable_baselines3.common.results_plotter import load_results, ts2xy
+import matplotlib.pyplot as plt
+from stable_baselines3.common.vec_env import DummyVecEnv
+from stable_baselines3 import DQN, PPO, A2C
+from stable_baselines3.common.monitor import Monitor
+from battleship_enviroment import BattleshipEnv
 
-# this is mainly for testing out the Battleship env
-reward_dict = {
-    'win': 100,
-    'missed': 0,
-    'touched': 1,
-    'repeat_missed': -1,
-    'repeat_touched': -0.5
-}
-env = gym.make('Battleship-v0', board_size=(5,5), reward_dictionary=reward_dict, episode_steps=21)
-obs = env.reset()
-print(obs)
+class SaveOnBestTrainingRewardCallback(BaseCallback):
+    """
+    Callback for saving a model (the check is done every ``check_freq`` steps)
+    based on the training reward (in practice, we recommend using ``EvalCallback``).
 
-for i in range(5):
-    newobs, reward, done, info = env.step(env.action_space.sample())
-    obs = newobs
-    #print(obs)
-    #print(env.reward_range)
-    env.render()
+    :param check_freq: (int)
+    :param log_dir: (str) Path to the folder where the model will be saved.
+      It must contains the file created by the ``Monitor`` wrapper.
+    :param verbose: (int)
+    """
+    def __init__(self, check_freq: int, episode_interval: int, log_dir: str, verbose=1):
+        super(SaveOnBestTrainingRewardCallback, self).__init__(verbose)
+        self.check_freq = check_freq
+        self.episode_interval = episode_interval
+        self.log_dir = log_dir
+        self.save_path = os.path.join(log_dir, 'best_model.pkl')
+        self.best_mean_reward = -np.inf
 
-# obs prints out two list of lists
-# one for hit ships (top)
-# one for missed ships (bottom)
-print(obs)
-print(reward_dict)
+    def _init_callback(self) -> None:
+        # Create folder if needed
+        if self.save_path is not None:
+            os.makedirs(self.save_path, exist_ok=True)
+
+    def _on_step(self) -> bool:
+        if self.n_calls % self.check_freq == 0:
+            # Evaluate policy training performance
+            x, y = ts2xy(load_results(self.log_dir), 'timesteps')
+            if len(x) > 0:
+                # NOTE: when done is True, timesteps are counted and reported to the log_dir
+                mean_reward = np.mean(y[-self.episode_interval:]) # mean reward over previous episode_interval episodes
+                mean_moves = np.mean(np.diff(x[-self.episode_interval:])) # mean moves over previous 100 episodes
+                if self.verbose > 0:
+                    print(x[-1], 'timesteps') # closest to step_interval step number
+                    print("Best mean reward: {:.2f} - Last mean reward per episode: {:.2f} - Last mean moves per episode: {:.2f}".format(self.best_mean_reward, 
+                                                                                                   mean_reward, mean_moves))
+
+                # New best model, you could save the agent here
+                if mean_reward > self.best_mean_reward:
+                    self.best_mean_reward = mean_reward
+                    # Example for saving best model
+                    if self.verbose > 0:
+                        print("Saving new best model")
+                    self.model.save(self.save_path)
+
+        return True
+
+def moving_average(values, window):
+    """
+    Smooth values by doing a moving average
+    :param values: (numpy array)
+    :param window: (int)
+    :return: (numpy array)
+    """
+    weights = np.repeat(1.0, window) / window
+    return np.convolve(values, weights, 'valid')
+
+
+def plot_results(log_folder, window = 100, title='Learning Curve'):
+    """
+    plot the results
+
+    :param log_folder: (str) the save location of the results to plot
+    :param title: (str) the title of the task to plot
+    """
+    
+    x, y = ts2xy(load_results(log_folder), 'timesteps')
+    y = moving_average(y, window=window)
+    y_moves = moving_average(np.diff(x), window = window) 
+    # Truncate x
+    x = x[len(x) - len(y):]
+    x_moves = x[len(x) - len(y_moves):]
+
+    title = 'Smoothed Learning Curve of Rewards (every ' + str(window) +' steps)'
+    fig = plt.figure(title)
+    plt.plot(x, y)
+    plt.xlabel('Number of Timesteps')
+    plt.ylabel('Rewards')
+    plt.title(title)
+    plt.show()
+
+    title = 'Smoothed Learning Curve of Moves (every ' + str(window) +' steps)'
+    fig = plt.figure(title)
+    plt.plot(x_moves, y_moves)
+    plt.xlabel('Number of Timesteps')
+    plt.ylabel('Moves')
+    plt.title(title)
+    plt.show()
+
+
+
+# ships -- keep only one kind for 5x5 grid
+ships = {}
+ships['cruiser'] = 3
+
+grid_size = 5
+num_timesteps = 1000000 # this is number of moves and not number of episodes
+
+best_mean_reward, n_steps, step_interval, episode_interval = -np.inf, 0, 10000, 10000
+
+# Instantiate the env
+env = BattleshipEnv(enemy_board=None, ship_locs={}, grid_size=grid_size, ships=ships)
+
+# wrap it
+log_dir = "./gym/"
+os.makedirs(log_dir, exist_ok=True)
+env = Monitor(env, filename=log_dir, allow_early_resets=True)
+env = DummyVecEnv([lambda: env])
+
+# Train the agent - Note: best model is not save in Callback function for PPO2; save manually
+model = PPO('MlpPolicy', env, verbose=0)
+model.learn(total_timesteps=num_timesteps, callback=callback)
+plot_results(log_dir,1000)
