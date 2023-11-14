@@ -12,7 +12,9 @@ from stable_baselines3 import PPO
 from stable_baselines3.ppo.policies import MlpPolicy
 from stable_baselines3.common.evaluation import evaluate_policy
 
+
 env = gym.make('Battleship-v0')
+
 
 model = PPO(MlpPolicy, env, verbose=0)
 
@@ -34,19 +36,17 @@ def evaluate(model, env, num_episodes = 100, deterministic = True):
     obs = env.reset()
     all_episode_rewards = []
     #print(vec_env.action_space)
-    print(env.action_space)
+
     for _ in range(num_episodes):
         episode_rewards = []
-        done = False
-        # Note: SB3 VecEnv resets automatically:
-        # https://stable-baselines3.readthedocs.io/en/master/guide/vec_envs.html#vecenv-api-vs-gym-api
+        done = False  
         obs = env.reset()
         while not done:
             # _states are only useful when using LSTM policies
             # `deterministic` is to use deterministic actions
             action, _states = model.predict(obs, deterministic=deterministic)
 
-            print(f"action = {action}")
+            #print(f"action = {action}")
 
 
             action = int(action)
@@ -62,6 +62,5 @@ def evaluate(model, env, num_episodes = 100, deterministic = True):
     return mean_episode_reward
 
 
-mean_reward = evaluate(model, env, num_episodes=100) #random policy
 
 #print(f"mean_reward: {mean_reward:.2f} +/- {std_reward:.2f}")  #shoul just be random policy prior to training
