@@ -15,8 +15,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 env = gym.make('Battleship-v0')
 
-
-model = PPO(MlpPolicy, env, verbose=0)
+model = PPO("MlpPolicy", env, verbose=0)
 
 
 #Modified from https://colab.research.google.com/github/araffin/rl-tutorial-jnrr19/blob/sb3/1_getting_started.ipynb#scrollTo=63M8mSKR-6Zt
@@ -33,6 +32,7 @@ def evaluate(model, env, num_episodes = 100, deterministic = True):
     # This function will only work for a single environment
     #vec_env = model.get_env()
     #obs = vec_env.reset()
+    #model.learn(total_timesteps = 10)
     obs = env.reset()
     all_episode_rewards = []
     #print(vec_env.action_space)
@@ -63,4 +63,4 @@ def evaluate(model, env, num_episodes = 100, deterministic = True):
 
 
 
-#print(f"mean_reward: {mean_reward:.2f} +/- {std_reward:.2f}")  #shoul just be random policy prior to training
+print(f"mean_reward: {mean_reward:.2f} +/- {mean_reward:.2f}")  #shoul just be random policy prior to training
