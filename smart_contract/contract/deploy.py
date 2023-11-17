@@ -4,7 +4,7 @@ import dotenv
 import typing
 import os
 
-from gamemanager import gamemanager
+import gamemanager
 
 
 def deploy() -> None:
@@ -18,7 +18,7 @@ def deploy() -> None:
         # Get localnet algod client
         client=localnet.get_algod_client(address=algorand_node_address),
         # Pass instance of app to client
-        app=gamemanager,
+        app=gamemanager.app,
         # Get acct from localnet and pass the signer
         signer=localnet.get_accounts().pop().signer,
     )
