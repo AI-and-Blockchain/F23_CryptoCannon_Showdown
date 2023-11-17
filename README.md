@@ -1,6 +1,7 @@
-# Structure
+# Github Structure
 
 "AI-Training" branch for the AI model training.
+
 "blockchain" branch for smart contract implementation.
 
 
