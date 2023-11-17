@@ -1,3 +1,9 @@
+# Structure
+
+"AI-Training" branch for the AI model training.
+"blockchain" branch for smart contract implementation.
+
+
 # CryptoCannon Showdown
 
 Play AI in a game of [Battleship](https://www.officialgamerules.org/battleship) (also known as Sea Battle) for the chance to win some cryptocurrency.
