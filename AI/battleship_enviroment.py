@@ -1,5 +1,5 @@
 import gym
-from gym import spaces
+from gymnasium import spaces
 import numpy as np
 
 # randomly places a ship on a board
@@ -168,11 +168,11 @@ class BattleshipEnv(gym.Env):
         # store the current value of the portfolio here
         info = {}
 
-        return next_state, reward, done, info
+        return next_state, reward, done, False, info
 
 
     
-    def reset(self):
+    def reset(self, seed = None):
         # Reset the state of the environment to an initial state
         """
         Important: the observation must be a numpy array
@@ -196,7 +196,7 @@ class BattleshipEnv(gym.Env):
 
         self.rdisc = 0
 
-        return self.board
+        return self.board, None
     
     # Render the environment to the screen
     # board (i,j)

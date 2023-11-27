@@ -48,10 +48,8 @@ def evaluate(model, env, num_episodes = 100, deterministic = True):
 
             #print(f"action = {action}")
 
-
-            action = int(action)
             obs, reward, done, _info = env.step(action)
-            episode_rewards.append(reward)
+            episode_rewards.append(reward[0])
 
         all_episode_rewards.append(sum(episode_rewards))
 
@@ -61,6 +59,3 @@ def evaluate(model, env, num_episodes = 100, deterministic = True):
 
     return mean_episode_reward
 
-
-
-print(f"mean_reward: {mean_reward:.2f} +/- {mean_reward:.2f}")  #shoul just be random policy prior to training

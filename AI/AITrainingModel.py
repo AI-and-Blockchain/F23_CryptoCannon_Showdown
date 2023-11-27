@@ -10,6 +10,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3 import DQN, PPO, A2C
 from stable_baselines3.common.monitor import Monitor
 from battleship_enviroment import BattleshipEnv
+from train_model import evaluate 
 
 class SaveOnBestTrainingRewardCallback(BaseCallback):
     """
@@ -106,7 +107,7 @@ ships = {}
 ships['cruiser'] = 3
 
 grid_size = 5
-num_timesteps = 1000000 # this is number of moves and not number of episodes
+num_timesteps = 100000 # this is number of moves and not number of episodes
 
 best_mean_reward, n_steps, step_interval, episode_interval = -np.inf, 0, 10000, 10000
 
@@ -122,5 +123,9 @@ env = DummyVecEnv([lambda: env])
 print(stable_baselines3.__version__)
 # Train the agent - Note: best model is not save in Callback function for PPO2; save manually
 model = PPO('MlpPolicy', env, verbose=0)
-model.learn(total_timesteps=num_timesteps, callback=callback)
+
+#See how well the model improves by learning
+evaluate(model, env)
+model.learn(total_timesteps=num_timesteps)
+evaluate(model, env)
 #plot_results(log_dir,1000)
