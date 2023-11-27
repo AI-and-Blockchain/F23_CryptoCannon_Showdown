@@ -1,4 +1,5 @@
 import gym
+import stable_baselines3
 from gym import spaces
 import numpy as np
 from stable_baselines3.common.callbacks import BaseCallback
@@ -118,7 +119,8 @@ os.makedirs(log_dir, exist_ok=True)
 env = Monitor(env, filename=log_dir, allow_early_resets=True)
 env = DummyVecEnv([lambda: env])
 
+print(stable_baselines3.__version__)
 # Train the agent - Note: best model is not save in Callback function for PPO2; save manually
 model = PPO('MlpPolicy', env, verbose=0)
 model.learn(total_timesteps=num_timesteps, callback=callback)
-plot_results(log_dir,1000)
+#plot_results(log_dir,1000)
