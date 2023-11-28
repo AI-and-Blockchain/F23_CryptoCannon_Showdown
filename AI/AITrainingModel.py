@@ -104,10 +104,14 @@ def plot_results(log_folder, window = 100, title='Learning Curve'):
 
 # ships -- keep only one kind for 5x5 grid
 ships = {}
+ships['carrier'] = 5
+ships['battleship'] = 4
 ships['cruiser'] = 3
+ships['submarine'] = 3
+ships['destroyer'] = 2
 
-grid_size = 5
-num_timesteps = 100000 # this is number of moves and not number of episodes
+grid_size = 10
+num_timesteps = 100 # this is number of moves and not number of episodes
 
 best_mean_reward, n_steps, step_interval, episode_interval = -np.inf, 0, 10000, 10000
 
@@ -128,4 +132,6 @@ model = PPO('MlpPolicy', env, verbose=0)
 evaluate(model, env)
 model.learn(total_timesteps=num_timesteps)
 evaluate(model, env)
+
+model.save("./models/model")
 #plot_results(log_dir,1000)
