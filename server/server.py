@@ -1,5 +1,5 @@
 import sys
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, session
 from stable_baselines3 import PPO
 import numpy as np
 sys.path.append("../AI")
@@ -7,28 +7,37 @@ from battleship_enviroment import BattleshipEnv
 
 app = Flask(__name__)
 
-# *This will change to 10x10 grid*
-ships = {}
-ships['carrier'] = 5
-ships['battleship'] = 4
-ships['cruiser'] = 3
-ships['submarine'] = 3
-ships['destroyer'] = 2
 
 grid_size = 10
 
-env = BattleshipEnv(enemy_board=None, ship_locs={}, grid_size=grid_size, ships=ships)
-
 # Load model
 model = PPO.load("../AI/models/model.zip")
-print(model)
-
-obs, _ = env.reset()
 
 
-@app.route('/get_move', methods=['GET'])
+# Frontend must send post request with obs of current game state so that the model can make best move
+# EXAMPLE:
+# obs= [[0, 0, -1, 0, 0, 0, 0, 0, -1, 0],
+#       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#       [0, 0, 0, -1, 0, 0, 0, 0, -1, 0],
+#       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#       [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+#       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#       [0, 0, 0, -1, 0, 0, 0, 0, 0, 0],
+#       [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+#       [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+#       [0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
+# Where 0 is a unknown spot, -1 is a miss, and 1 is a hit
+#
+# returned action is the index of where the model wants to hit
+@app.route('/get_move', methods=['POST'])
 def get_move():
-    global obs
+
+    data = request.json
+
+    if 'gameState' not in data:
+        return jsonify({'error': 'Missing gameState parameter'}), 400
+    
+    obs = data['gameState']
 
     # Use the PPO model to predict the next move
     action, _ = model.predict(obs)
@@ -38,9 +47,6 @@ def get_move():
     i, j = np.unravel_index(action, (grid_size,grid_size))
 
     i,j = int(i), int(j)
-
-    #take next step in env so it's up to date
-    obs, _, _, _, _ = env.step(action)
 
     # Return the move as JSON
     return jsonify({'move': (i,j)})
