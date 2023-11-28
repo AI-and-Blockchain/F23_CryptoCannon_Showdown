@@ -23,19 +23,12 @@ env = BattleshipEnv(enemy_board=None, ship_locs={}, grid_size=grid_size, ships=s
 model = PPO.load("../AI/models/model.zip")
 print(model)
 
+obs, _ = env.reset()
 
-@app.route('/get_move', methods=['POST'])
+
+@app.route('/get_move', methods=['GET'])
 def get_move():
-
-    #request should send the user's previous move
-    # Get the game state from the request
-    data = request.json
-    if 'prevMove' not in data:
-        return jsonify({'error': 'Missing prevMove parameter'}), 400
-
-    prev_move = int(data['prevMove'])
-
-    obs, _, _, _, _ = env.step(prev_move)
+    global obs
 
     # Use the PPO model to predict the next move
     action, _ = model.predict(obs)
@@ -45,7 +38,7 @@ def get_move():
     i, j = np.unravel_index(action, (grid_size,grid_size))
 
     i,j = int(i), int(j)
-    
+
     #take next step in env so it's up to date
     obs, _, _, _, _ = env.step(action)
 
