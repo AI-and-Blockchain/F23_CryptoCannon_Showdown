@@ -4,9 +4,12 @@
 
 "blockchain" branch for smart contract implementation.
 
+"UI" branch for the game interface
+
 
 # CryptoCannon Showdown
-[Click here to play](https://xbubonic.github.io/)
+[Click here to play](https://ai-and-blockchain.github.io/F23_CryptoCannon_Showdown/)
+
 Play AI in a game of [Battleship](https://www.officialgamerules.org/battleship) (also known as Sea Battle) for the chance to win some cryptocurrency.
 
 Users bet an amount of cryptocurrency before starting a game, and then play a game against the AI. If they win, they get their crypto back plus a bit extra. They can also purchase cosmetic NFTs to customize how the game looks, like their ships.
