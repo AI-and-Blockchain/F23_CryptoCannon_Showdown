@@ -23,7 +23,8 @@ env = BattleshipEnv(enemy_board=None, ship_locs={}, grid_size=grid_size, ships=s
 model = PPO.load("../AI/models/model.zip")
 print(model)
 
-
+# Frontend must send json with {'prevMove': int} where the int is the action the user just submitted
+# action is an integer, so an action of 30 is a hit at grid position 3,0(row 3 column 0)
 @app.route('/get_move', methods=['POST'])
 def get_move():
 
