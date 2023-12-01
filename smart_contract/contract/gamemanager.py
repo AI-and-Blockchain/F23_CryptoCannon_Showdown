@@ -5,17 +5,32 @@ import beaker.lib.storage
 import pyteal as pt
 
 
+MAX_SCORE = 18
+
+
 class GameManagerState:
     player_board = beaker.LocalStateValue(
         stack_type=pt.TealType.bytes,
         default=pt.Bytes(b"\0" * 100),
-        descr="user's current game (0 means empty, 1 means ship present, 2 means ship hit)",
+        descr="user's current game (0 means empty, 1 means ship present, 2 means miss, 3 means hit)",
+    )
+
+    player_score = beaker.LocalStateValue(
+        stack_type=pt.TealType.uint64,
+        default=pt.Int(0),
+        descr="Amount of hits the player has",
     )
 
     opponent_board = beaker.LocalStateValue(
         stack_type=pt.TealType.bytes,
         default=pt.Bytes(b"\0" * 100),
-        descr="user's current game (0 means empty, 1 means ship present, 2 means ship hit)",
+        descr="user's current game (0 means empty, 1 means ship present, 2 means miss, 3 means hit)",
+    )
+
+    opponent_score = beaker.LocalStateValue(
+        stack_type=pt.TealType.uint64,
+        default=pt.Int(0),
+        descr="Amount of hits the opponent has",
     )
 
     game_status = beaker.LocalStateValue(
@@ -24,7 +39,9 @@ class GameManagerState:
         descr="If the user is currently in a game"
         "0 = not in a game"
         "1 = waiting on board placement"
-        "2 = in game",
+        "2 = in game"
+        "3 = player win"
+        "4 = opponent win",
     )
 
 
@@ -45,6 +62,17 @@ def only_in_game(sdr: pt.Expr) -> pt.Expr:
     return (pt.App.optedIn(sdr, pt.App.id())) and (
         app.state.game_status[sdr].get() == pt.Int(2)
     )
+
+
+@app.external(read_only=True, authorize=only_in_game)
+def current_player_score(*, output: pt.abi.Uint8):
+    return output.set(app.state.player_score.get())
+
+
+@app.external(read_only=True, authorize=only_in_game)
+def current_opponent_score(*, output: pt.abi.Uint8):
+    return output.set(app.state.opponent_score.get())
+
 
 @app.external(read_only=True, authorize=beaker.Authorize.opted_in())
 def new_game(
@@ -76,6 +104,8 @@ def new_game(
             )
         ),
         app.state.game_status.set(pt.Int(1)),
+        app.state.player_score.set_default(),
+        app.state.opponent_score.set_default(),
     )
 
 
