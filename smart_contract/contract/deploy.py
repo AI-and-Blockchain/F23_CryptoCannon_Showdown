@@ -68,14 +68,25 @@ def deploy() -> None:
     p_ret = app_client.call(gamemanager.current_player_board).return_value
     o_ret = app_client.call(gamemanager.current_opponent_board).return_value
 
-    print("player \t\t\t opponent")
+    print_board(p_ret, o_ret, labels=["player", "opponent"])
+
+
+def print_board(*boards: list[int], labels: list[str] = []):
+    for label in labels:
+        print(f"{label}\t\t\t", end="")
+    print()
+
     for i in range(10):
-        player_row = ""
-        opponent_row = ""
+        rows = [[] for _ in range(len(boards))]
         for j in range(10):
-            player_row += f"{p_ret[i * 10 + j]} "
-            opponent_row += f"{o_ret[i * 10 + j]} "
-        print(f"{player_row} \t {opponent_row}")
+            for b in range(len(boards)):
+                rows[b].append(f"{boards[b][i * 10 + j]} ")
+
+        for row in rows:
+            for c in row:
+                print(c, end="")
+            print("\t", end="")
+        print()
 
 
 if __name__ == "__main__":
