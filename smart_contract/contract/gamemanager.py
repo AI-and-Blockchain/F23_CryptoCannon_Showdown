@@ -40,6 +40,12 @@ def is_in_game(*, output: pt.abi.Bool) -> pt.Expr:
     return output.set(app.state.game_status.get() == pt.Int(2))
 
 
+@pt.Subroutine(pt.TealType.uint64)
+def only_in_game(sdr: pt.Expr) -> pt.Expr:
+    return (pt.App.optedIn(sdr, pt.App.id())) and (
+        app.state.game_status[sdr].get() == pt.Int(2)
+    )
+
 @app.external(read_only=True, authorize=beaker.Authorize.opted_in())
 def new_game(
     o_ship1_pos: pt.abi.Uint8,
