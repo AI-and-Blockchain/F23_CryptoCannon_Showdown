@@ -225,5 +225,44 @@ def current_opponent_board(
     return output.set(app.state.opponent_board)
 
 
+@app.external(authorize=only_in_game)
+def player_shoot(pos: pt.abi.Uint8, *, output: pt.abi.Bool) -> pt.Expr:
+    return pt.Seq(
+        output.set(shoot(pos, app.state.opponent_board, app.state.player_score)),
+        pt.If(
+            app.state.player_score.get() >= pt.Int(MAX_SCORE),
+            app.state.game_status.set(pt.Int(3)),
+        ),
+    )
+
+
+@app.external(authorize=only_in_game)
+def opponent_shoot(pos: pt.abi.Uint8, *, output: pt.abi.Bool) -> pt.Expr:
+    return pt.Seq(
+        output.set(shoot(pos, app.state.player_board, app.state.opponent_score)),
+        pt.If(
+            app.state.opponent_score.get() >= pt.Int(MAX_SCORE),
+            app.state.game_status.set(pt.Int(4)),
+        ),
+    )
+
+
+def shoot(
+    pos: pt.abi.Uint8, board: beaker.LocalStateValue, score: beaker.LocalStateValue
+) -> pt.Expr:
+    return pt.Seq(
+        pt.Assert(pt.GetByte(board.get(), pos.get()) <= pt.Int(1)),
+        pt.If(
+            pt.GetByte(board.get(), pos.get()) == pt.Int(1),
+            pt.Seq(
+                board.set(pt.SetByte(board.get(), pos.get(), pt.Int(3))),
+                score.set(score.get() + pt.Int(1)),
+                pt.Int(1),
+            ),
+            pt.Seq(board.set(pt.SetByte(board.get(), pos.get(), pt.Int(2))), pt.Int(0)),
+        ),
+    )
+
+
 if __name__ == "__main__":
     gamemanager_spec = app.build()
