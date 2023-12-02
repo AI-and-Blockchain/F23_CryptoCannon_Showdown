@@ -22,13 +22,16 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
       It must contains the file created by the ``Monitor`` wrapper.
     :param verbose: (int)
     """
+
     def __init__(self, check_freq: int, episode_interval: int, log_dir: str, verbose=1):
         super(SaveOnBestTrainingRewardCallback, self).__init__(verbose)
         self.check_freq = check_freq
         self.episode_interval = episode_interval
         self.log_dir = log_dir
-        self.save_path = os.path.join(log_dir, 'best_model.pkl')
+        self.save_path = os.path.join('./gym/', 'best_model5x5.pkl')
+        print("SAVE PATH: ", self.save_path)
         self.best_mean_reward = -np.inf
+
 
     def _init_callback(self) -> None:
         # Create folder if needed
@@ -54,9 +57,10 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
                     # Example for saving best model
                     if self.verbose > 0:
                         print("Saving new best model")
-                    self.model.save(self.save_path)
+                    self.model.save('best_model5x5.pkl')
 
         return True
+
 
 def moving_average(values, window):
     """
@@ -101,18 +105,25 @@ def plot_results(log_folder, window = 100, title='Learning Curve'):
     plt.show()
 
 
-
+# https://towardsdatascience.com/an-artificial-intelligence-learns-to-play-battleship-ebd2cf9adb01#89b2
 # ships -- keep only one kind for 5x5 grid
 ships = {}
 ships['cruiser'] = 3
+ships['carrier'] = 5
+ships['submarine'] = 3
+ships['destroyer'] = 2
+ships['battleship'] = 4
 
-grid_size = 5
-num_timesteps = 100000 # this is number of moves and not number of episodes
+
+grid_size = 6
+num_timesteps = 5000000 # this is number of moves and not number of episodes
+
 
 best_mean_reward, n_steps, step_interval, episode_interval = -np.inf, 0, 10000, 10000
 
 # Instantiate the env
 env = BattleshipEnv(enemy_board=None, ship_locs={}, grid_size=grid_size, ships=ships)
+
 
 # wrap it
 log_dir = "./gym/"
@@ -120,12 +131,14 @@ os.makedirs(log_dir, exist_ok=True)
 env = Monitor(env, filename=log_dir, allow_early_resets=True)
 env = DummyVecEnv([lambda: env])
 
-print(stable_baselines3.__version__)
+callback = SaveOnBestTrainingRewardCallback(check_freq=100000, episode_interval=episode_interval, log_dir=log_dir)
+
+#print(stable_baselines3.__version__)
 # Train the agent - Note: best model is not save in Callback function for PPO2; save manually
 model = PPO('MlpPolicy', env, verbose=0)
 
 #See how well the model improves by learning
 evaluate(model, env)
-model.learn(total_timesteps=num_timesteps)
+model.learn(total_timesteps=num_timesteps, callback=callback)
 evaluate(model, env)
-#plot_results(log_dir,1000)
+plot_results(log_dir, 1000)

@@ -1,4 +1,4 @@
-import gym
+import gymnasium as gym
 from gymnasium import spaces
 import numpy as np
 
@@ -125,10 +125,16 @@ class BattleshipEnv(gym.Env):
         if (i,j) not in self.legal_actions:
             reward -= 2*self.grid_size
             action_idx = np.random.randint(0,len(self.legal_actions))
-            
             i,j = self.legal_actions[action_idx]                
             action = np.ravel_multi_index((i,j), (self.grid_size,self.grid_size))
         
+        #checks for ships nearby radius
+        RADIUS = 1
+        neighbors = self._neighbors(i, j, RADIUS, self.grid_size)
+        neighborcheck = self._neighborcheck(neighbors)
+        validneighbors = neighborcheck[1]
+
+    
         # set new state after performing action (scoring board is updated)
         self.set_state((i,j))
         # update legal actions and action_space
@@ -141,6 +147,7 @@ class BattleshipEnv(gym.Env):
         empty_cnts_post, hit_cnts_post, miss_cnts_post = self.board_config(next_state)
 
         # game completed?
+        #print(f"Hit Count: {hit_cnts_post} | Total Ships: {sum(self.ships.values())}")
         done = bool(hit_cnts_post == sum(self.ships.values()))
                     
         # reward for a hit
@@ -150,10 +157,11 @@ class BattleshipEnv(gym.Env):
             rp = (self.grid_size*self.grid_size if done else self.grid_size)
             reward += rp*r_discount
             #print('HIT!!!')
-            
-        #if done:
-        #    print('done')
-            
+        
+        # reward for a near hit
+        reward += neighborcheck[0]
+        
+        #print(done)
         # we discount the reward for a subsequent hit the longer it takes to score it
         # after a hit, zero the discount 
         # don't start discounting though, if first hit hasn't happened yet
@@ -165,6 +173,7 @@ class BattleshipEnv(gym.Env):
         reward = float(reward)
             
         #print('reward:', reward)
+        #print('next_state', next_state)
         # store the current value of the portfolio here
         info = {}
 
@@ -250,3 +259,36 @@ class BattleshipEnv(gym.Env):
     def set_legal_actions(self, action):
         if action in self.legal_actions:
             self.legal_actions.remove(action)
+
+
+    def _neighbors(self, i, j, radius, dim): 
+
+        neighbors = list() 
+        for idx in range(radius):
+            rad = idx + 1
+            neighbors.extend([(i+rad, j), 
+                    (i, j+rad), 
+                    (i-rad, j), 
+                    (i, j-rad), 
+                    (i+rad, j+rad), 
+                    (i+rad, j-rad), 
+                    (i-rad, j+rad), 
+                    (i-rad, j-rad), 
+                    ])
+
+        out = list()
+        for neighbor in neighbors: 
+            if (0 <= neighbor[0] < dim) and (0 <= neighbor[1] < dim):
+                out.append(neighbor)
+            else: 
+                pass 
+        return out
+
+    def _neighborcheck(self, neighbors):
+        totalreward = 0
+        validlist = []
+        for n in neighbors:
+            if self.enemy_board[n[0], n[1]] == 1:
+                validlist.append(n)
+                totalreward += 0.2
+        return [totalreward, validlist]

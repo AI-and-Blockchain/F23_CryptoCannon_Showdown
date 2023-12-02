@@ -49,8 +49,9 @@ def evaluate(model, env, num_episodes = 100, deterministic = True):
             #print(f"action = {action}")
 
             obs, reward, done, _info = env.step(action)
+            #print(done)
             episode_rewards.append(reward[0])
-
+        #print(obs)
         all_episode_rewards.append(sum(episode_rewards))
 
     print(all_episode_rewards)
