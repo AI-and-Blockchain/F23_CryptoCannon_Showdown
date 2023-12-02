@@ -1,43 +1,55 @@
-from flask import Flask, jsonify, request
+import sys
+from flask import Flask, jsonify, request, session
 from stable_baselines3 import PPO
 import numpy as np
-from AI.battleship_enviroment import BattleshipEnv
+sys.path.append("../AI")
+from battleship_enviroment import BattleshipEnv
 
 app = Flask(__name__)
 
-# *This will change to 10x10 grid*
-ships = {}
-ships['cruiser'] = 3
 
-grid_size = 5
-
-env = BattleshipEnv(enemy_board=None, ship_locs={}, grid_size=grid_size, ships=ships)
+grid_size = 10
 
 # Load model
-model = PPO.load("path/to/your/model.zip")
+model = PPO.load("../AI/models/model.zip")
 
 
+# Frontend must send post request with obs of current game state so that the model can make best move
+# EXAMPLE:
+# obs= [[0, 0, -1, 0, 0, 0, 0, 0, -1, 0],
+#       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#       [0, 0, 0, -1, 0, 0, 0, 0, -1, 0],
+#       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#       [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+#       [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#       [0, 0, 0, -1, 0, 0, 0, 0, 0, 0],
+#       [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+#       [0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+#       [0, 0, 0, 0, 0, 0, 1, 0, 0, 0]]
+# Where 0 is a unknown spot, -1 is a miss, and 1 is a hit
+#
+# returned action is the index of where the model wants to hit
 @app.route('/get_move', methods=['POST'])
 def get_move():
 
-    #request should send the user's previous move
-    # Get the game state from the request
     data = request.json
-    if 'prevMove' not in data:
-        return jsonify({'error': 'Missing prevMove parameter'}), 400
 
-    prev_move = data['prevMove']
-
-    obs, _, _, _, _ = env.step(prev_move)
+    if 'gameState' not in data:
+        return jsonify({'error': 'Missing gameState parameter'}), 400
+    
+    obs = data['gameState']
 
     # Use the PPO model to predict the next move
     action, _ = model.predict(obs)
+    action = int(action)
 
-    #take next step in env so it's up to date
-    obs, _, _, _, _ = env.step(action)
+    #i is the row that is being hit, j is the column
+    i, j = np.unravel_index(action, (grid_size,grid_size))
+
+    i,j = int(i), int(j)
 
     # Return the move as JSON
-    return jsonify({'move': action})
+    return jsonify({'move': (i,j)})
 
 if __name__ == '__main__':
     app.run(debug=True)

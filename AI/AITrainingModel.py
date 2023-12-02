@@ -108,14 +108,14 @@ def plot_results(log_folder, window = 100, title='Learning Curve'):
 # https://towardsdatascience.com/an-artificial-intelligence-learns-to-play-battleship-ebd2cf9adb01#89b2
 # ships -- keep only one kind for 5x5 grid
 ships = {}
-ships['cruiser'] = 3
 ships['carrier'] = 5
+ships['battleship'] = 4
+ships['cruiser'] = 3
 ships['submarine'] = 3
 ships['destroyer'] = 2
-ships['battleship'] = 4
 
-
-grid_size = 6
+num_timesteps = 100
+grid_size = 10
 num_timesteps = 5000000 # this is number of moves and not number of episodes
 
 
@@ -142,3 +142,6 @@ evaluate(model, env)
 model.learn(total_timesteps=num_timesteps, callback=callback)
 evaluate(model, env)
 plot_results(log_dir, 1000)
+
+model.save("./models/model")
+#plot_results(log_dir,1000)
