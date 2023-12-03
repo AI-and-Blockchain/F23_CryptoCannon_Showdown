@@ -29,7 +29,7 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
         self.check_freq = check_freq
         self.episode_interval = episode_interval
         self.log_dir = log_dir
-        self.save_path = os.path.join('./gym/', 'best_model.pkl')
+        self.save_path = os.path.join('./gym/', 'best_modelHOPT.pkl')
         print("SAVE PATH: ", self.save_path)
         self.best_mean_reward = -np.inf
 
@@ -58,7 +58,7 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
                     # Example for saving best model
                     if self.verbose > 0:
                         print("Saving new best model")
-                    self.model.save('best_model.pkl')
+                    self.model.save('best_modelHOPT.pkl')
 
         return True
 
@@ -196,8 +196,9 @@ def objective(space):
     print('reward', rewards_mean, 'moves', moves_mean)
     
     # hyperopt will minimize objective, number of moves in this case
+    model.save("./models/model")
     return{'loss': moves_mean, 'status': STATUS_OK }
-
+    
 
 space = {
     'env_copies': hp.choice('env_copies', [10]),

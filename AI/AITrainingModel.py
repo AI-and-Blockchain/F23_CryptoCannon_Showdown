@@ -28,7 +28,7 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
         self.check_freq = check_freq
         self.episode_interval = episode_interval
         self.log_dir = log_dir
-        self.save_path = os.path.join('./gym/', 'best_model5x5.pkl')
+        self.save_path = os.path.join('./gym/', 'best_model.pkl')
         print("SAVE PATH: ", self.save_path)
         self.best_mean_reward = -np.inf
 
@@ -57,7 +57,7 @@ class SaveOnBestTrainingRewardCallback(BaseCallback):
                     # Example for saving best model
                     if self.verbose > 0:
                         print("Saving new best model")
-                    self.model.save('best_model5x5.pkl')
+                    self.model.save('best_model.pkl')
 
         return True
 
@@ -109,14 +109,14 @@ def plot_results(log_folder, window = 100, title='Learning Curve'):
 # ships -- keep only one kind for 5x5 grid
 ships = {}
 ships['carrier'] = 5
-ships['battleship'] = 4
-ships['cruiser'] = 3
-ships['submarine'] = 3
-ships['destroyer'] = 2
+#ships['battleship'] = 4
+#ships['cruiser'] = 3
+#ships['submarine'] = 3
+#ships['destroyer'] = 2
 
-num_timesteps = 100
-grid_size = 10
-num_timesteps = 5000000 # this is number of moves and not number of episodes
+
+grid_size = 6
+num_timesteps = 500000 # this is number of moves and not number of episodes
 
 
 best_mean_reward, n_steps, step_interval, episode_interval = -np.inf, 0, 10000, 10000
@@ -141,7 +141,6 @@ model = PPO('MlpPolicy', env, verbose=0)
 evaluate(model, env)
 model.learn(total_timesteps=num_timesteps, callback=callback)
 evaluate(model, env)
-plot_results(log_dir, 1000)
 
 model.save("./models/model")
-#plot_results(log_dir,1000)
+plot_results(log_dir, 1000)
