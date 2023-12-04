@@ -60,6 +60,19 @@ def is_in_game(*, output: pt.abi.Bool) -> pt.Expr:
     )
 
 
+def assert_in_game(adr: pt.abi.Address) -> pt.Expr:
+    return pt.Assert(
+        (
+            app.state.game_status[adr.get()].get()
+            == pt.Int(GameState.IN_GAME_TURN_PLAYER.value)
+        )
+        or (
+            app.state.game_status[adr.get()].get()
+            == pt.Int(GameState.IN_GAME_TURN_OPPONENT.value)
+        )
+    )
+
+
 @pt.Subroutine(pt.TealType.uint64)
 def only_in_game(sdr: pt.Expr) -> pt.Expr:
     return (pt.App.optedIn(sdr, pt.App.id())) and (
@@ -76,22 +89,16 @@ def player_turn(sdr: pt.Expr) -> pt.Expr:
     )
 
 
-@pt.Subroutine(pt.TealType.uint64)
-def oppponent_turn(sdr: pt.Expr) -> pt.Expr:
-    return (pt.App.optedIn(sdr, pt.App.id())) and (
-        app.state.game_status[sdr].get()
-        == pt.Int(GameState.IN_GAME_TURN_OPPONENT.value)
-    )
-
-
 @app.external(read_only=True, authorize=only_in_game)
 def current_player_score(*, output: pt.abi.Uint8):
     return output.set(app.state.player_score.get())
 
 
-@app.external(read_only=True, authorize=only_in_game)
-def current_opponent_score(*, output: pt.abi.Uint8):
-    return output.set(app.state.opponent_score.get())
+@app.external(read_only=True, authorize=beaker.Authorize.only_creator())
+def current_opponent_score(game: pt.abi.Address, *, output: pt.abi.Uint8):
+    return pt.Seq(
+        assert_in_game(game), output.set(app.state.opponent_score[game.get()].get())
+    )
 
 
 @app.external(read_only=True, authorize=beaker.Authorize.opted_in())
@@ -238,11 +245,13 @@ def current_player_board(*, output: pt.abi.StaticBytes[typing.Literal[100]]) -> 
     return output.set(app.state.player_board)
 
 
-@app.external(read_only=True, authorize=beaker.Authorize.opted_in())
+@app.external(read_only=True, authorize=beaker.Authorize.only_creator())
 def current_opponent_board(
-    *, output: pt.abi.StaticBytes[typing.Literal[100]]
+    game: pt.abi.Address, *, output: pt.abi.StaticBytes[typing.Literal[100]]
 ) -> pt.Expr:
-    return output.set(app.state.opponent_board)
+    return pt.Seq(
+        assert_in_game(game), output.set(app.state.opponent_board[game.get()])
+    )
 
 
 @app.external(authorize=player_turn)
@@ -256,9 +265,12 @@ def player_shoot(pos: pt.abi.Uint8, *, output: pt.abi.Bool) -> pt.Expr:
     )
 
 
-@app.external(authorize=oppponent_turn)
-def opponent_shoot(pos: pt.abi.Uint8, *, output: pt.abi.Bool) -> pt.Expr:
+@app.external(authorize=beaker.Authorize.only_creator())
+def opponent_shoot(
+    game: pt.abi.Address, pos: pt.abi.Uint8, *, output: pt.abi.Bool
+) -> pt.Expr:
     return pt.Seq(
+        assert_in_game(game),
         output.set(shoot(pos, app.state.player_board, app.state.opponent_score)),
         pt.If(
             app.state.opponent_score.get() >= pt.Int(MAX_SCORE),
