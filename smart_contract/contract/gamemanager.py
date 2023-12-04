@@ -4,6 +4,8 @@ import beaker.application
 import beaker.lib.storage
 import pyteal as pt
 
+from gamestate import GameState
+
 
 MAX_SCORE = 18
 
@@ -35,13 +37,8 @@ class GameManagerState:
 
     game_status = beaker.LocalStateValue(
         stack_type=pt.TealType.uint64,
-        default=pt.Int(0),
-        descr="If the user is currently in a game"
-        "0 = not in a game"
-        "1 = waiting on board placement"
-        "2 = in game"
-        "3 = player win"
-        "4 = opponent win",
+        default=pt.Int(GameState.NOT_IN_GAME),
+        descr="Current game status",
     )
 
 
@@ -54,13 +51,31 @@ app = (
 
 @app.external(read_only=True, authorize=beaker.Authorize.opted_in())
 def is_in_game(*, output: pt.abi.Bool) -> pt.Expr:
-    return output.set(app.state.game_status.get() == pt.Int(2))
+    return output.set(
+        (app.state.game_status.get() == pt.Int(GameState.IN_GAME_TURN_PLAYER))
+        or (app.state.game_status.get() == pt.Int(GameState.IN_GAME_TURN_OPPONENT))
+    )
 
 
 @pt.Subroutine(pt.TealType.uint64)
 def only_in_game(sdr: pt.Expr) -> pt.Expr:
     return (pt.App.optedIn(sdr, pt.App.id())) and (
-        app.state.game_status[sdr].get() == pt.Int(2)
+        app.state.game_status[sdr].get() == pt.Int(GameState.IN_GAME_TURN_PLAYER)
+        or app.state.game_status[sdr].get() == pt.Int(GameState.IN_GAME_TURN_OPPONENT)
+    )
+
+
+@pt.Subroutine(pt.TealType.uint64)
+def player_turn(sdr: pt.Expr) -> pt.Expr:
+    return (pt.App.optedIn(sdr, pt.App.id())) and (
+        app.state.game_status[sdr].get() == pt.Int(GameState.IN_GAME_TURN_PLAYER)
+    )
+
+
+@pt.Subroutine(pt.TealType.uint64)
+def oppponent_turn(sdr: pt.Expr) -> pt.Expr:
+    return (pt.App.optedIn(sdr, pt.App.id())) and (
+        app.state.game_status[sdr].get() == pt.Int(GameState.IN_GAME_TURN_OPPONENT)
     )
 
 
@@ -225,7 +240,7 @@ def current_opponent_board(
     return output.set(app.state.opponent_board)
 
 
-@app.external(authorize=only_in_game)
+@app.external(authorize=player_turn)
 def player_shoot(pos: pt.abi.Uint8, *, output: pt.abi.Bool) -> pt.Expr:
     return pt.Seq(
         output.set(shoot(pos, app.state.opponent_board, app.state.player_score)),
@@ -236,7 +251,7 @@ def player_shoot(pos: pt.abi.Uint8, *, output: pt.abi.Bool) -> pt.Expr:
     )
 
 
-@app.external(authorize=only_in_game)
+@app.external(authorize=oppponent_turn)
 def opponent_shoot(pos: pt.abi.Uint8, *, output: pt.abi.Bool) -> pt.Expr:
     return pt.Seq(
         output.set(shoot(pos, app.state.player_board, app.state.opponent_score)),
