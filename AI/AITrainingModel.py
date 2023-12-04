@@ -135,12 +135,13 @@ callback = SaveOnBestTrainingRewardCallback(check_freq=100000, episode_interval=
 
 #print(stable_baselines3.__version__)
 # Train the agent - Note: best model is not save in Callback function for PPO2; save manually
-model = PPO('MlpPolicy', env, verbose=0)
-
+#model = PPO.model('MlpPolicy', env, verbose=0)
+model = PPO.load("../AI/models/model.zip")
+model.set_env(env)
 #See how well the model improves by learning
 #evaluate(model, env)
 model.learn(total_timesteps=num_timesteps, callback=callback)
-evaluate(model, env)
+#evaluate(model, env)
 
 model.save("./models/model")
 plot_results(log_dir, 1000)
