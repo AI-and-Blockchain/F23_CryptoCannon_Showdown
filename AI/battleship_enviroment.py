@@ -118,6 +118,10 @@ class BattleshipEnv(gym.Env):
         
         #print('action', action, 'coords', i, j)
         #print('legal_actions', self.legal_actions)
+        RADIUS = 2
+        neighbors = self._neighbors(i, j, RADIUS, self.grid_size)
+        neighborcheck = self._neighborcheck(neighbors)
+        validneighbors = neighborcheck[1]
         
         # lose 1 point for any action
         reward = -1
@@ -129,10 +133,7 @@ class BattleshipEnv(gym.Env):
             action = np.ravel_multi_index((i,j), (self.grid_size,self.grid_size))
         
         #checks for ships nearby radius
-        RADIUS = 1
-        neighbors = self._neighbors(i, j, RADIUS, self.grid_size)
-        neighborcheck = self._neighborcheck(neighbors)
-        validneighbors = neighborcheck[1]
+
 
     
         # set new state after performing action (scoring board is updated)
