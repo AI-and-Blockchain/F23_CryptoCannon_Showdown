@@ -7,12 +7,12 @@ import os
 import gamemanager
 
 
-def deploy() -> None:
+def deploy():
     algorand_node_address = (
         os.environ.get("ALGORAND_NODE") or localnet.clients.DEFAULT_ALGOD_ADDRESS
     )
 
-    account = localnet.get_accounts()[0]
+    owner = localnet.get_accounts()[0]
 
     print(f"connecting to algorand node at {algorand_node_address}")
     # Create an Application client
@@ -22,7 +22,7 @@ def deploy() -> None:
         # Pass instance of app to client
         app=gamemanager.app,
         # Get acct from localnet and pass the signer
-        signer=account.signer,
+        signer=owner.signer,
     )
 
     # Deploy the app on-chain
@@ -34,61 +34,9 @@ def deploy() -> None:
     """
     )
 
-    app_client.opt_in(sender=account.address)
-
-    print(app_client.call(gamemanager.is_in_game).return_value)
-    app_client.call(
-        gamemanager.new_game,
-        o_ship1_pos=0,
-        o_ship1_rot=True,
-        o_ship2_pos=11,
-        o_ship2_rot=False,
-        o_ship3_pos=35,
-        o_ship3_rot=False,
-        o_ship4_pos=48,
-        o_ship4_rot=True,
-        o_ship5_pos=92,
-        o_ship5_rot=False,
-    )
-
-    app_client.call(
-        gamemanager.submit_player_ship_positions,
-        p_ship1_pos=5,
-        p_ship1_rot=True,
-        p_ship2_pos=6,
-        p_ship2_rot=False,
-        p_ship3_pos=35,
-        p_ship3_rot=False,
-        p_ship4_pos=63,
-        p_ship4_rot=False,
-        p_ship5_pos=50,
-        p_ship5_rot=True,
-    )
-
-    p_ret = app_client.call(gamemanager.current_player_board).return_value
-    o_ret = app_client.call(gamemanager.current_opponent_board).return_value
-
-    print_board(p_ret, o_ret, labels=["player", "opponent"])
-
-
-def print_board(*boards: list[int], labels: list[str] = []):
-    for label in labels:
-        print(f"{label}\t\t\t", end="")
-    print()
-
-    for i in range(10):
-        rows = [[] for _ in range(len(boards))]
-        for j in range(10):
-            for b in range(len(boards)):
-                rows[b].append(f"{boards[b][i * 10 + j]} ")
-
-        for row in rows:
-            for c in row:
-                print(c, end="")
-            print("\t", end="")
-        print()
+    return app_id, app_addr
 
 
 if __name__ == "__main__":
     dotenv.load_dotenv()
-    deploy()
+    print(deploy())
