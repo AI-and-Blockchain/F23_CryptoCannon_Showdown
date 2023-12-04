@@ -115,7 +115,7 @@ ships['carrier'] = 5
 #ships['destroyer'] = 2
 
 
-grid_size = 6
+grid_size = 10
 num_timesteps = 500000 # this is number of moves and not number of episodes
 
 
@@ -138,7 +138,7 @@ callback = SaveOnBestTrainingRewardCallback(check_freq=100000, episode_interval=
 model = PPO('MlpPolicy', env, verbose=0)
 
 #See how well the model improves by learning
-evaluate(model, env)
+#evaluate(model, env)
 model.learn(total_timesteps=num_timesteps, callback=callback)
 evaluate(model, env)
 

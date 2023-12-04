@@ -42,6 +42,8 @@ CONST.TYPE_MISS = 2; // 2 = water with a cannonball in it (missed shot)
 CONST.TYPE_HIT = 3; // 3 = damaged ship (hit shot)
 CONST.TYPE_SUNK = 4; // 4 = sunk ship
 
+var GridInfo = '';
+
 // TODO: Make this better OO code. CONST.AVAILABLE_SHIPS should be an array
 //       of objects rather than than two parallel arrays. Or, a better
 //       solution would be to store "USED" and "UNUSED" as properties of
@@ -102,7 +104,7 @@ Stats.prototype.syncStats = function() {
 	} else {
 		this.skipCurrentGame = false;
 	}
-	
+
 	var stringifiedGrid = '';
 	for (var x = 0; x < Game.size; x++) {
 		for (var y = 0; y < Game.size; y++) {
@@ -222,12 +224,16 @@ Game.prototype.shoot = function(x, y, targetPlayer) {
 	}
 
 	if (targetGrid.isDamagedShip(x, y)) {
+		GridInfo = this.humanGrid;
 		return null;
 	} else if (targetGrid.isMiss(x, y)) {
+		GridInfo = this.humanGrid;
 		return null;
 	} else if (targetGrid.isUndamagedShip(x, y)) {
 		// update the board/grid
 		targetGrid.updateCell(x, y, 'hit', targetPlayer);
+		GridInfo = this.humanGrid;
+		//console.log(GridInfo);
 		// IMPORTANT: This function needs to be called _after_ updating the cell to a 'hit',
 		// because it overrides the CSS class to 'sunk' if we find that the ship was sunk
 		targetFleet.findShipByCoords(x, y).incrementDamage(); // increase the damage
@@ -235,6 +241,7 @@ Game.prototype.shoot = function(x, y, targetPlayer) {
 		return CONST.TYPE_HIT;
 	} else {
 		targetGrid.updateCell(x, y, 'miss', targetPlayer);
+		GridInfo = this.humanGrid;
 		this.checkIfWon();
 		return CONST.TYPE_MISS;
 	}
@@ -262,7 +269,7 @@ Game.prototype.shootListener = function(e) {
 		}
 		// The AI shoots iff the player clicks on a cell that he/she hasn't
 		// already clicked on yet
-		self.robot.shoot();
+		self.robot.shoot(GridInfo);
 	} else {
 		Game.gameOver = false;
 	}
@@ -516,7 +523,7 @@ Game.prototype.init = function() {
 	this.humanFleet = new Fleet(this.humanGrid, CONST.HUMAN_PLAYER);
 	this.computerFleet = new Fleet(this.computerGrid, CONST.COMPUTER_PLAYER);
 
-	//this.robot = new AI(this);
+	this.robot = new AI(this);
 	Game.stats = new Stats();
 	Game.stats.updateStatsSidebar();
 
@@ -961,34 +968,46 @@ function AI(gameObject) {
 	this.gameObject = gameObject;
 	this.virtualGrid = new Grid(Game.size);
 	this.virtualFleet = new Fleet(this.virtualGrid, CONST.VIRTUAL_PLAYER);
-
-	this.probGrid = []; // Probability Grid
-	this.initProbs();
-	this.updateProbs();
 }
 
-AI.prototype.shoot = async function() {
-    const response = await fetch("/get_move", {
+AI.prototype.shoot = async function(gameObject) {
+    const response = await fetch("http://127.0.0.1:5000/get_move", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+			'Access-Control-Allow-Origin': 'http://127.0.0.1:5000/',
+			"Access-Control-Allow-Methods": "POST, GET, PUT",
+			"Access-Control-Allow-Headers": "Content-Type"
         },
-        body: JSON.stringify(gameState),
+		body: JSON.stringify({ gameState: gameObject }),
     });
 
-    const { ai_move } = await response.json();
-	var result = this.gameObject.shoot(ai_move[0], ai_move[1], CONST.HUMAN_PLAYER);
+	// Check if the request was successful (status code 200)
+	if (!response.ok) {
+		const errorData = await response.json();
+		console.error('Error:', errorData.error);
+		return;
+	}
+
+    // Parse the JSON response
+    const responseData = await response.json();
+    const move = responseData.move;
+
+    // Now you can use the 'move' variable in your JavaScript code
+    console.log('Received move:', move);
+
+	var result = this.gameObject.shoot(move[0], move[1], CONST.HUMAN_PLAYER);
 	
 	if (Game.gameOver) {
 		Game.gameOver = false;
 		return;
 	}
 
-	this.virtualGrid.cells[ai_move[0]][ai_move[1]] = result;
+	this.virtualGrid.cells[move[0]][move[1]] = result;
 
 	// If you hit a ship, check to make sure if you've sunk it.
 	if (result === CONST.TYPE_HIT) {
-		var humanShip = this.findHumanShip(ai_move[0], ai_move[1]);
+		var humanShip = this.findHumanShip(move[0], move[1]);
 		if (humanShip.isSunk()) {
 			// Remove any ships from the roster that have been sunk
 			var shipTypes = [];
@@ -1007,6 +1026,20 @@ AI.prototype.shoot = async function() {
 	}
 }
 
+
+AI.prototype.findHumanShip = function(x, y) {
+	return this.gameObject.humanFleet.findShipByCoords(x, y);
+};
+
+AI.prototype.numHitCellsCovered = function(shipCells) {
+	var cells = 0;
+	for (var i = 0; i < shipCells.length; i++) {
+		if (this.virtualGrid.cells[shipCells[i].x][shipCells[i].y] === CONST.TYPE_HIT) {
+			cells++;
+		}
+	}
+	return cells;
+};
 // Scouts the grid based on max probability, and shoots at the cell
 // that has the highest probability of containing a ship
 
