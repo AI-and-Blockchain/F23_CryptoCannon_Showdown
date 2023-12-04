@@ -1,3 +1,4 @@
+from os import path
 import typing
 import beaker
 import beaker.application
@@ -284,4 +285,12 @@ def shoot(
 
 
 if __name__ == "__main__":
+    import sys
+    import os
+
     gamemanager_spec = app.build()
+
+    path = sys.argv[0].removesuffix("/gamemanager.py")
+
+    os.mkdir(path + "/contract_abi")
+    gamemanager_spec.export(path + "/contract_abi")
