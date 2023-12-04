@@ -12,6 +12,16 @@ import deploy
 import gamemanager
 import beaker
 
+# deploy contract and load it
+contract_id, contract_address = deploy.deploy()
+account = beaker.localnet.get_accounts()[0]
+app_client = beaker.client.ApplicationClient(
+    client=beaker.localnet.get_algod_client(),
+    app=gamemanager.app,
+    signer=account.signer,
+    app_id=contract_id,
+)
+
 
 app = Flask(__name__)
 CORS(app)
@@ -23,34 +33,26 @@ grid_size = 10
 model = PPO.load("../AI/models/model.zip")
 
 
-#gets current ship locations in gamemanager smart contract form
+# gets current ship locations in gamemanager smart contract form
 def get_position_from_board(board_state):
     pass
 
 
-@app.route('/setup_board', methods=['POST'])
+@app.route("/setup_board", methods=["POST"])
 def setup_board():
     data = request.json
 
-    if 'user_board' not in data or 'ai_board' not in data:
-        return jsonify({'error': 'Missing user_board or ai_board or both parameter'}), 400
-    
-    # deploy contract and load it
-    contract_id, contract_address = deploy.deploy()
-    account = beaker.localnet.get_accounts()[0]
-    app_client = beaker.client.ApplicationClient(
-        client=beaker.localnet.get_algod_client(),
-        app=gamemanager.app,
-        signer=account.signer,
-        app_id=contract_id,
-    )
+    if "user_board" not in data or "ai_board" not in data:
+        return (
+            jsonify({"error": "Missing user_board or ai_board or both parameter"}),
+            400,
+        )
 
-    user_board = data['user_board']
-    ai_board = data['ai_board']
+    user_board = data["user_board"]
+    ai_board = data["ai_board"]
 
-    user_pos, user_rot = get_pos_from_board(user_board)
-    ai_pos, ai_rot = get_pos_from_board(ai_board)
-
+    user_pos, user_rot = get_position_from_board(user_board)
+    ai_pos, ai_rot = get_position_from_board(ai_board)
 
     app_client.call(
         gamemanager.new_game,
@@ -79,8 +81,6 @@ def setup_board():
         p_ship5_pos=ai_pos[4],
         p_ship5_rot=ai_rot[4],
     )
-
-
 
 
 # Frontend must send post request with obs of current game state so that the model can make best move
