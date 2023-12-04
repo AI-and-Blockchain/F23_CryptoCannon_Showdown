@@ -2,3 +2,13 @@
 .idea
 **/venv
 **/__pycache__
+AI/__pycache__/battleship_enviroment.cpython-310.pyc
+AI/__pycache__/train_model.cpython-311.pyc
+AI/__pycache__/train_model.cpython-310.pyc
+AI/__pycache__/battleship_enviroment.cpython-311.pyc
+AI/output.txt
+AI/best_model5x5.pkl
+AI/__pycache__/battleship_enviroment.cpython-311.pyc
+AI/gym/monitor.csv
+.gitignore
+AI/__pycache__/battleship_enviroment.cpython-311.pyc

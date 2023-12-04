@@ -1,4 +1,14 @@
+# Github Structure
+
+"AI-Training" branch for the AI model training.
+
+"blockchain" branch for smart contract implementation.
+
+"UI" branch for the game interface
+
+
 # CryptoCannon Showdown
+[Click here to play](https://ai-and-blockchain.github.io/F23_CryptoCannon_Showdown/)
 
 Play AI in a game of [Battleship](https://www.officialgamerules.org/battleship) (also known as Sea Battle) for the chance to win some cryptocurrency.
 
