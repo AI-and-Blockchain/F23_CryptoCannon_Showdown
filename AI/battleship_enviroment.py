@@ -118,7 +118,7 @@ class BattleshipEnv(gym.Env):
         
         #print('action', action, 'coords', i, j)
         #print('legal_actions', self.legal_actions)
-        RADIUS = 2
+        RADIUS = 1
         neighbors = self._neighbors(i, j, RADIUS, self.grid_size)
         neighborcheck = self._neighborcheck(neighbors)
         validneighbors = neighborcheck[1]
@@ -291,5 +291,5 @@ class BattleshipEnv(gym.Env):
         for n in neighbors:
             if self.enemy_board[n[0], n[1]] == 1:
                 validlist.append(n)
-                totalreward += 0.5
+                totalreward += 0.25
         return [totalreward, validlist]
