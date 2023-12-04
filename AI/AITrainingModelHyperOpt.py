@@ -202,7 +202,7 @@ def objective(space):
 
 space = {
     'env_copies': hp.choice('env_copies', [10]),
-    'num_timesteps': hp.choice('num_timesteps', [1000000]), #np.arange(1000000, 1000001, 1000000, dtype=int)
+    'num_timesteps': hp.choice('num_timesteps', [10000]), #np.arange(1000000, 1000001, 1000000, dtype=int)
     'gamma': hp.choice('gamma', [0.99, 0.95, 0.9]),
     'n_steps': hp.choice('n_steps', [5, 1, 10]),
     'vf_coef': hp.choice('vf_coef', [0.25, 0.1, 0.5]),
