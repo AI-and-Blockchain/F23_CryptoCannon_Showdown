@@ -31,12 +31,11 @@ grid_size = 10
 
 # Load model
 model = PPO.load("../AI/models/model.zip")
-
+found_nodes = []
 
 @app.route("/setup_board", methods=["POST"])
 def setup_board():
     data = request.json
-
     if "user_board" not in data or "ai_board" not in data:
         return (
             jsonify({"error": "Missing user_board or ai_board or both parameter"}),
@@ -93,6 +92,15 @@ def setup_board():
 # Where 0 is a unknown spot, -1 is a miss, and 1 is a hit
 #
 # returned action is the index of where the model wants to hit
+
+@app.route("/reset_board", methods=["POST"])
+def reset_board():
+    found_nodes.clear()
+    print("RESET BOARD!")
+    return "RESET BOARD!!"
+
+
+
 @app.route("/get_move", methods=["POST"])
 def get_move():
     data = request.json
@@ -124,15 +132,20 @@ def get_move():
         obs.append(inner_obs)
     # print(obs)
     # Use the PPO model to predict the next move]
-    action, _ = model.predict(obs)
-    action = int(action)
+    while True:
+        action, _ = model.predict(obs)
+        action = int(action)
 
-    # i is the row that is being hit, j is the column
-    i, j = np.unravel_index(action, (grid_size, grid_size))
+        # i is the row that is being hit, j is the column
+        i, j = np.unravel_index(action, (grid_size, grid_size))
 
-    i, j = int(i), int(j)
+        i, j = int(i), int(j)
+        if [i, j] in found_nodes:
+            continue
+        found_nodes.append([i, j])
+        break
     # print(i, j)
-
+    print(len(found_nodes))
     # Return the move as JSON
     return jsonify({"move": (i, j)})
 
