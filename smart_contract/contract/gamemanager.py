@@ -37,7 +37,7 @@ class GameManagerState:
 
     game_status = beaker.LocalStateValue(
         stack_type=pt.TealType.uint64,
-        default=pt.Int(GameState.NOT_IN_GAME),
+        default=pt.Int(GameState.NOT_IN_GAME.value),
         descr="Current game status",
     )
 
@@ -52,30 +52,34 @@ app = (
 @app.external(read_only=True, authorize=beaker.Authorize.opted_in())
 def is_in_game(*, output: pt.abi.Bool) -> pt.Expr:
     return output.set(
-        (app.state.game_status.get() == pt.Int(GameState.IN_GAME_TURN_PLAYER))
-        or (app.state.game_status.get() == pt.Int(GameState.IN_GAME_TURN_OPPONENT))
+        (app.state.game_status.get() == pt.Int(GameState.IN_GAME_TURN_PLAYER.value))
+        or (
+            app.state.game_status.get() == pt.Int(GameState.IN_GAME_TURN_OPPONENT.value)
+        )
     )
 
 
 @pt.Subroutine(pt.TealType.uint64)
 def only_in_game(sdr: pt.Expr) -> pt.Expr:
     return (pt.App.optedIn(sdr, pt.App.id())) and (
-        app.state.game_status[sdr].get() == pt.Int(GameState.IN_GAME_TURN_PLAYER)
-        or app.state.game_status[sdr].get() == pt.Int(GameState.IN_GAME_TURN_OPPONENT)
+        app.state.game_status[sdr].get() == pt.Int(GameState.IN_GAME_TURN_PLAYER.value)
+        or app.state.game_status[sdr].get()
+        == pt.Int(GameState.IN_GAME_TURN_OPPONENT.value)
     )
 
 
 @pt.Subroutine(pt.TealType.uint64)
 def player_turn(sdr: pt.Expr) -> pt.Expr:
     return (pt.App.optedIn(sdr, pt.App.id())) and (
-        app.state.game_status[sdr].get() == pt.Int(GameState.IN_GAME_TURN_PLAYER)
+        app.state.game_status[sdr].get() == pt.Int(GameState.IN_GAME_TURN_PLAYER.value)
     )
 
 
 @pt.Subroutine(pt.TealType.uint64)
 def oppponent_turn(sdr: pt.Expr) -> pt.Expr:
     return (pt.App.optedIn(sdr, pt.App.id())) and (
-        app.state.game_status[sdr].get() == pt.Int(GameState.IN_GAME_TURN_OPPONENT)
+        app.state.game_status[sdr].get()
+        == pt.Int(GameState.IN_GAME_TURN_OPPONENT.value)
     )
 
 
