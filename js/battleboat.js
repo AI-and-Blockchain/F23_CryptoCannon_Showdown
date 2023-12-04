@@ -967,6 +967,46 @@ function AI(gameObject) {
 	this.updateProbs();
 }
 
+AI.prototype.shoot = async function() {
+    const response = await fetch("/get_move", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(gameState),
+    });
+
+    const { ai_move } = await response.json();
+	var result = this.gameObject.shoot(ai_move[0], ai_move[1], CONST.HUMAN_PLAYER);
+	
+	if (Game.gameOver) {
+		Game.gameOver = false;
+		return;
+	}
+
+	this.virtualGrid.cells[ai_move[0]][ai_move[1]] = result;
+
+	// If you hit a ship, check to make sure if you've sunk it.
+	if (result === CONST.TYPE_HIT) {
+		var humanShip = this.findHumanShip(ai_move[0], ai_move[1]);
+		if (humanShip.isSunk()) {
+			// Remove any ships from the roster that have been sunk
+			var shipTypes = [];
+			for (var k = 0; k < this.virtualFleet.fleetRoster.length; k++) {
+				shipTypes.push(this.virtualFleet.fleetRoster[k].type);
+			}
+			var index = shipTypes.indexOf(humanShip.type);
+			this.virtualFleet.fleetRoster.splice(index, 1);
+
+			// Update the virtual grid with the sunk ship's cells
+			var shipCells = humanShip.getAllShipCells();
+			for (var _i = 0; _i < shipCells.length; _i++) {
+				this.virtualGrid.cells[shipCells[_i].x][shipCells[_i].y] = CONST.TYPE_SUNK;
+			}
+		}
+	}
+}
+
 // Scouts the grid based on max probability, and shoots at the cell
 // that has the highest probability of containing a ship
 
