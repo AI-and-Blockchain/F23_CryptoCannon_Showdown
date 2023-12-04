@@ -2,8 +2,13 @@ import sys
 from flask import Flask, jsonify, request, session
 from stable_baselines3 import PPO
 import numpy as np
+
 sys.path.append("../AI")
 from battleship_enviroment import BattleshipEnv
+
+from ..smart_contract import deploy, gamemanager
+import beaker
+
 
 app = Flask(__name__)
 
@@ -12,6 +17,16 @@ grid_size = 10
 
 # Load model
 model = PPO.load("../AI/models/model.zip")
+
+# deploy contract and load it
+contract_id, contract_address = deploy.deploy()
+account = beaker.localnet.get_accounts()[0]
+app_client = beaker.client.ApplicationClient(
+    client=beaker.localnet.get_algod_client(),
+    app=gamemanager.app,
+    signer=account.signer,
+    app_id=contract_id,
+)
 
 
 # Frontend must send post request with obs of current game state so that the model can make best move
