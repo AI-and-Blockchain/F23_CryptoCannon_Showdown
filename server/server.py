@@ -33,11 +33,6 @@ grid_size = 10
 model = PPO.load("../AI/models/model.zip")
 
 
-# gets current ship locations in gamemanager smart contract form
-def get_position_from_board(board_state):
-    pass
-
-
 @app.route("/setup_board", methods=["POST"])
 def setup_board():
     data = request.json
@@ -51,35 +46,35 @@ def setup_board():
     user_board = data["user_board"]
     ai_board = data["ai_board"]
 
-    user_pos, user_rot = get_position_from_board(user_board)
-    ai_pos, ai_rot = get_position_from_board(ai_board)
+    print(user_board)
+    print(ai_board)
 
     app_client.call(
         gamemanager.new_game,
-        o_ship1_pos=user_pos[0],
-        o_ship1_rot=user_rot[0],
-        o_ship2_pos=user_pos[1],
-        o_ship2_rot=user_rot[1],
-        o_ship3_pos=user_pos[2],
-        o_ship3_rot=user_rot[2],
-        o_ship4_pos=user_pos[3],
-        o_ship4_rot=user_rot[3],
-        o_ship5_pos=user_pos[4],
-        o_ship5_rot=user_rot[4],
+        o_ship1_pos=ai_board[0][0],
+        o_ship1_rot=ai_board[0][1],
+        o_ship2_pos=ai_board[1][0],
+        o_ship2_rot=ai_board[1][1],
+        o_ship3_pos=ai_board[2][0],
+        o_ship3_rot=ai_board[2][1],
+        o_ship4_pos=ai_board[3][0],
+        o_ship4_rot=ai_board[3][1],
+        o_ship5_pos=ai_board[4][0],
+        o_ship5_rot=ai_board[4][1],
     )
 
     app_client.call(
         gamemanager.submit_player_ship_positions,
-        p_ship1_pos=ai_pos[0],
-        p_ship1_rot=ai_rot[0],
-        p_ship2_pos=ai_pos[1],
-        p_ship2_rot=ai_rot[1],
-        p_ship3_pos=ai_pos[2],
-        p_ship3_rot=ai_rot[2],
-        p_ship4_pos=ai_pos[3],
-        p_ship4_rot=ai_rot[3],
-        p_ship5_pos=ai_pos[4],
-        p_ship5_rot=ai_rot[4],
+        o_ship1_pos=user_board[0][0],
+        o_ship1_rot=user_board[0][1],
+        o_ship2_pos=user_board[1][0],
+        o_ship2_rot=user_board[1][1],
+        o_ship3_pos=user_board[2][0],
+        o_ship3_rot=user_board[2][1],
+        o_ship4_pos=user_board[3][0],
+        o_ship4_rot=user_board[3][1],
+        o_ship5_pos=user_board[4][0],
+        o_ship5_rot=user_board[4][1],
     )
 
 
