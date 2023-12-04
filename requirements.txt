@@ -1,0 +1,12 @@
+Beaker==1.12.1
+Flask==2.2.2
+Flask_Cors==4.0.0
+gym_battleship==0.0.1
+gymnasium==0.29.1
+hyperopt==0.2.7
+matplotlib==3.6.2
+numpy==1.24.1
+py_algorand_sdk==2.5.0
+pyteal==0.24.1
+python-dotenv==1.0.0
+stable_baselines3==2.2.0
