@@ -488,13 +488,31 @@
       }),
     });
 
+
     el.removeEventListener(transitionEndEventName(), fn, false);
   };
   // Click handler for Restart Game button
-  Game.prototype.restartGame = function (e) {
+  Game.prototype.restartGame = async function (e) {
     e.target.removeEventListener(e.type, arguments.callee);
     var self = e.target.self;
     document.getElementById("restart-sidebar").setAttribute("class", "hidden");
+    const response = await fetch("http://127.0.0.1:5000/reset_board", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "http://127.0.0.1:5000/",
+        "Access-Control-Allow-Methods": "POST, GET, PUT",
+        "Access-Control-Allow-Headers": "Content-Type",
+      },
+
+      body: "test",
+    });
+
+    // Check if the request was successful (status code 200)
+    if (!response.ok) {
+      console.error("Error:", errorData.error);
+      return;
+    }
     self.resetFogOfWar();
     self.init();
   };
