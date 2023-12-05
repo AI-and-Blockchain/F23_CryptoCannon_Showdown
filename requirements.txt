@@ -1,6 +1,6 @@
-Beaker==1.12.1
-Flask==2.2.2
+beaker-pyteal==1.1.1
 Flask_Cors==4.0.0
+Flask==2.2.2
 gym_battleship==0.0.1
 gymnasium==0.29.1
 hyperopt==0.2.7

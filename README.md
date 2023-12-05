@@ -6,8 +6,8 @@
 
 "UI" branch for the game interface
 
-
 # CryptoCannon Showdown
+
 [Click here to play](https://ai-and-blockchain.github.io/F23_CryptoCannon_Showdown/)
 
 Play AI in a game of [Battleship](https://www.officialgamerules.org/battleship) (also known as Sea Battle) for the chance to win some cryptocurrency.
@@ -48,3 +48,10 @@ stateDiagram-v2
     Game_Webapp --> Player
 
 ```
+
+# Setup
+
+1. Install `docker compose`
+2. Run `cd smart_contract; docker compose up`
+3. Run `pip install -r requirements.txt`
+4. Run `cd server; server.py`
