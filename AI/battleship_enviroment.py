@@ -291,5 +291,5 @@ class BattleshipEnv(gym.Env):
         for n in neighbors:
             if self.enemy_board[n[0], n[1]] == 1:
                 validlist.append(n)
-                totalreward += 0.25
+                totalreward += 0.85
         return [totalreward, validlist]

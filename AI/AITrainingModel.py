@@ -107,42 +107,41 @@ def plot_results(log_folder, window = 100, title='Learning Curve'):
 
 # https://towardsdatascience.com/an-artificial-intelligence-learns-to-play-battleship-ebd2cf9adb01#89b2
 # ships -- keep only one kind for 5x5 grid
-while True:
-    ships = {}
-    #ships['carrier'] = 5
-    #ships['battleship'] = 4
-    ships['cruiser'] = 3
-    #ships['submarine'] = 3
-    #ships['destroyer'] = 2
+ships = {}
+#ships['carrier'] = 5
+#ships['battleship'] = 4
+ships['cruiser'] = 3
+#ships['submarine'] = 3
+#ships['destroyer'] = 2
 
 
-    grid_size = 10
-    num_timesteps = 500000 # this is number of moves and not number of episodes
+grid_size = 10
+num_timesteps = 500000 # this is number of moves and not number of episodes
 
 
-    best_mean_reward, n_steps, step_interval, episode_interval = -np.inf, 0, 10000, 10000
+best_mean_reward, n_steps, step_interval, episode_interval = -np.inf, 0, 10000, 10000
 
-    # Instantiate the env
-    env = BattleshipEnv(enemy_board=None, ship_locs={}, grid_size=grid_size, ships=ships)
+# Instantiate the env
+env = BattleshipEnv(enemy_board=None, ship_locs={}, grid_size=grid_size, ships=ships)
 
 
-    # wrap it
-    log_dir = "./gym/"
-    os.makedirs(log_dir, exist_ok=True)
-    env = Monitor(env, filename=log_dir, allow_early_resets=True)
-    env = DummyVecEnv([lambda: env])
+# wrap it
+log_dir = "./gym/"
+os.makedirs(log_dir, exist_ok=True)
+env = Monitor(env, filename=log_dir, allow_early_resets=True)
+env = DummyVecEnv([lambda: env])
 
-    callback = SaveOnBestTrainingRewardCallback(check_freq=100000, episode_interval=episode_interval, log_dir=log_dir)
+callback = SaveOnBestTrainingRewardCallback(check_freq=100000, episode_interval=episode_interval, log_dir=log_dir)
 
     #print(stable_baselines3.__version__)
     # Train the agent - Note: best model is not save in Callback function for PPO2; save manually
     #model = PPO.model('MlpPolicy', env, verbose=0)
-    model = PPO.load("../AI/models/model.zip")
-    model.set_env(env)
+model = PPO.load("../AI/models/model.zip")
+model.set_env(env)
     #See how well the model improves by learning
     #evaluate(model, env)
-    model.learn(total_timesteps=num_timesteps, callback=callback)
+model.learn(total_timesteps=num_timesteps, callback=callback)
     #evaluate(model, env)
 
-    model.save("./models/model")
+model.save("./models/model")
 #plot_results(log_dir, 1000)
